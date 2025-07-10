@@ -1,0 +1,18 @@
+# Environment
+.env
+
+# Persisted index files (can be large)
+data/faiss_index.bin
+data/metadata.json
+data/metadata.pkl
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Streamlit
+.streamlit/secrets.toml
