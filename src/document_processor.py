@@ -1,7 +1,9 @@
 import io
-import re
 from pypdf import PdfReader
-from src.config import CHUNK_SIZE, CHUNK_OVERLAP
+
+
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 200
 
 
 def split_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
@@ -31,17 +33,3 @@ def process_pdf(file) -> list[dict]:
                     "page": page_num,
                 })
     return chunks
-
-
-def process_txt(file) -> list[dict]:
-    """Extract and chunk text from an uploaded TXT file."""
-    text = file.getvalue().decode("utf-8")
-    return [
-        {"text": chunk_text, "doc_name": file.name, "page": "N/A"}
-        for chunk_text in split_text(text)
-    ]
-
-
-def tokenize(text: str) -> list[str]:
-    """Simple word tokeniser used by BM25."""
-    return re.findall(r'\w+', text.lower())
