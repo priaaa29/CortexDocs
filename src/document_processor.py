@@ -1,10 +1,7 @@
 import io
 import re
 from pypdf import PdfReader
-
-
-CHUNK_SIZE = 800
-CHUNK_OVERLAP = 200
+from src.config import CHUNK_SIZE, CHUNK_OVERLAP
 
 
 def split_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
