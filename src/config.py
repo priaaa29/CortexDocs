@@ -14,3 +14,17 @@ RERANK_MODEL_NAME = "ms-marco-MiniLM-L-12-v2"
 # ── Chunking ───────────────────────────────────────────────────────────────────
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 200
+
+# ── Retrieval ──────────────────────────────────────────────────────────────────
+VECTOR_WEIGHT = 0.6
+BM25_WEIGHT = 0.4
+RRF_K = 20
+BASE_K_FACTUAL = 15
+BASE_K_SUMMARY = 25
+FUSION_TOP_N = 18
+RERANK_TOP_K = 7
+
+# ── LLM ────────────────────────────────────────────────────────────────────────
+LLM_TEMPERATURE = 0.3
+LLM_MAX_TOKENS = 1200
+HISTORY_WINDOW = 6
