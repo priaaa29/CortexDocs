@@ -17,7 +17,6 @@ def _build_bm25(chunks: list[dict]) -> BM25Okapi:
 
 
 def load_index(data_dir: str) -> tuple:
-    """Load persisted FAISS index and rebuild BM25. Returns (index, chunks, bm25, model)."""
     if not (os.path.exists(INDEX_PATH) and os.path.exists(METADATA_PATH)):
         return None, [], None, None
     try:
@@ -33,7 +32,6 @@ def load_index(data_dir: str) -> tuple:
 
 
 def save_index(index, chunks: list[dict]) -> None:
-    """Persist FAISS index and chunk metadata to disk."""
     os.makedirs(os.path.dirname(INDEX_PATH), exist_ok=True)
     faiss.write_index(index, INDEX_PATH)
     with open(METADATA_PATH, "w", encoding="utf-8") as f:
@@ -41,20 +39,33 @@ def save_index(index, chunks: list[dict]) -> None:
 
 
 def add_chunks(new_chunks: list[dict], existing_chunks: list[dict], existing_index, model=None):
-    """Embed new chunks, add to FAISS index, rebuild BM25."""
     if model is None:
         model = SentenceTransformer(EMBEDDING_MODEL_NAME)
-
     texts = [c["text"] for c in new_chunks]
     embeddings = model.encode(texts, normalize_embeddings=True).astype("float32")
-
     if existing_index is None:
         dim = embeddings.shape[1]
         index = faiss.IndexFlatIP(dim)
     else:
         index = existing_index
-
     index.add(embeddings)
     all_chunks = existing_chunks + new_chunks
     bm25 = _build_bm25(all_chunks)
     return index, all_chunks, bm25, model
+
+
+def vector_search(query: str, index, chunks: list[dict], model, k: int):
+    q_emb = model.encode([query], normalize_embeddings=True).astype("float32")
+    distances, indices = index.search(q_emb, k)
+    results = [chunks[i] for i in indices[0] if i < len(chunks)]
+    scores = distances[0].tolist()
+    return results, scores
+
+
+def bm25_search(query: str, bm25: BM25Okapi, chunks: list[dict], k: int):
+    tokens = tokenize(query)
+    all_scores = bm25.get_scores(tokens)
+    top_indices = np.argsort(all_scores)[::-1][:k]
+    results = [chunks[i] for i in top_indices]
+    scores = [all_scores[i] for i in top_indices]
+    return results, scores
