@@ -9,19 +9,19 @@ from sentence_transformers import SentenceTransformer
 
 from src.config import (
     INDEX_PATH, METADATA_PATH, EMBEDDING_MODEL_NAME,
-    VECTOR_WEIGHT, BM25_WEIGHT, RRF_K, FUSION_TOP_N,
+    VECTOR_WEIGHT, BM25_WEIGHT, RRF_K,
+    BASE_K_FACTUAL, BASE_K_SUMMARY, FUSION_TOP_N,
 )
 from src.document_processor import tokenize
 
 
-def _build_bm25(chunks: list[dict]) -> BM25Okapi:
-    tokenized = [tokenize(c["text"]) for c in chunks]
-    return BM25Okapi(tokenized)
-
+# ── Persistence ────────────────────────────────────────────────────────────────
 
 def load_index(data_dir: str) -> tuple:
+    """Load persisted FAISS index, chunks, and rebuild BM25. Returns (index, chunks, bm25, model) or (None, [], None, None)."""
     if not (os.path.exists(INDEX_PATH) and os.path.exists(METADATA_PATH)):
         return None, [], None, None
+
     try:
         index = faiss.read_index(INDEX_PATH)
         with open(METADATA_PATH, "r", encoding="utf-8") as f:
@@ -35,37 +35,57 @@ def load_index(data_dir: str) -> tuple:
 
 
 def save_index(index, chunks: list[dict]) -> None:
+    """Persist FAISS index and chunk metadata to disk."""
     os.makedirs(os.path.dirname(INDEX_PATH), exist_ok=True)
     faiss.write_index(index, INDEX_PATH)
     with open(METADATA_PATH, "w", encoding="utf-8") as f:
         json.dump({"chunks": chunks}, f, ensure_ascii=False, indent=2)
 
 
+# ── Index building ─────────────────────────────────────────────────────────────
+
+def _build_bm25(chunks: list[dict]) -> BM25Okapi:
+    tokenized = [tokenize(c["text"]) for c in chunks]
+    return BM25Okapi(tokenized)
+
+
 def add_chunks(new_chunks: list[dict], existing_chunks: list[dict], existing_index, model=None):
+    """Embed new chunks, add to FAISS index, rebuild BM25. Returns (index, all_chunks, bm25, model)."""
     if model is None:
         model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+
     texts = [c["text"] for c in new_chunks]
     embeddings = model.encode(texts, normalize_embeddings=True).astype("float32")
+
     if existing_index is None:
-        index = faiss.IndexFlatIP(embeddings.shape[1])
+        dim = embeddings.shape[1]
+        index = faiss.IndexFlatIP(dim)
     else:
         index = existing_index
+
     index.add(embeddings)
     all_chunks = existing_chunks + new_chunks
-    return index, all_chunks, _build_bm25(all_chunks), model
+    bm25 = _build_bm25(all_chunks)
+    return index, all_chunks, bm25, model
 
+
+# ── Search ─────────────────────────────────────────────────────────────────────
 
 def vector_search(query: str, index, chunks: list[dict], model, k: int):
     q_emb = model.encode([query], normalize_embeddings=True).astype("float32")
     distances, indices = index.search(q_emb, k)
-    return [chunks[i] for i in indices[0] if i < len(chunks)], distances[0].tolist()
+    results = [chunks[i] for i in indices[0] if i < len(chunks)]
+    scores = distances[0].tolist()
+    return results, scores
 
 
 def bm25_search(query: str, bm25: BM25Okapi, chunks: list[dict], k: int):
     tokens = tokenize(query)
     all_scores = bm25.get_scores(tokens)
     top_indices = np.argsort(all_scores)[::-1][:k]
-    return [chunks[i] for i in top_indices], [all_scores[i] for i in top_indices]
+    results = [chunks[i] for i in top_indices]
+    scores = [all_scores[i] for i in top_indices]
+    return results, scores
 
 
 def hybrid_score_fusion(
@@ -101,3 +121,17 @@ def hybrid_score_fusion(
     sorted_items = sorted(score_dict.items(), key=lambda x: x[1], reverse=True)[:top_n]
     id_to_chunk = {id(c): c for c in all_chunks}
     return [id_to_chunk[idx] for idx, _ in sorted_items if idx in id_to_chunk]
+
+
+def retrieve(query: str, index, chunks: list[dict], bm25, model, query_type: str, filter_docs=None) -> list[dict]:
+    """Full retrieval pipeline: vector + BM25 -> fusion -> optional doc filter."""
+    k = BASE_K_SUMMARY if query_type in ("summary", "comparison") else BASE_K_FACTUAL
+
+    v_results, v_scores = vector_search(query, index, chunks, model, k)
+    b_results, b_scores = bm25_search(query, bm25, chunks, k)
+    fused = hybrid_score_fusion(v_results, b_results, v_scores, b_scores, chunks)
+
+    if filter_docs:
+        fused = [c for c in fused if c["doc_name"] in filter_docs]
+
+    return fused if fused else v_results[:10]
