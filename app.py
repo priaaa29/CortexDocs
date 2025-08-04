@@ -10,10 +10,14 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+from ui.styles import inject_css
+from ui.sidebar import render_sidebar
+from ui.chat import render_chat
 from src.retrieval import load_index
 from src.config import DATA_DIR
 
-# ── Session state initialisation ──────────────────────────────────────────────
+inject_css()
+
 defaults = {
     "index": None,
     "chunks": [],
@@ -26,7 +30,6 @@ for key, val in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = val
 
-# ── Load persisted index on first run ─────────────────────────────────────────
 if st.session_state.index is None and not st.session_state.chunks:
     with st.spinner("Loading index…"):
         idx, chunks, bm25, model = load_index(DATA_DIR)
@@ -36,4 +39,5 @@ if st.session_state.index is None and not st.session_state.chunks:
         st.session_state.bm25 = bm25
         st.session_state.embedding_model = model
 
-st.write("Session initialised — sidebar and chat coming next.")
+render_sidebar()
+render_chat()
