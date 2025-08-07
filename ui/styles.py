@@ -35,32 +35,63 @@ def inject_css() -> None:
         }
 
         *, *::before, *::after { box-sizing: border-box; }
-
-        html, body, [class*="css"] {
-            font-family: var(--font-mono) !important;
-            color: var(--text-md) !important;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .stApp {
-            background: var(--bg) !important;
-            background-image: radial-gradient(circle, hsl(215, 14%, 12%) 1px, transparent 1px) !important;
-            background-size: 24px 24px !important;
-        }
-
+        html, body, [class*="css"] { font-family: var(--font-mono) !important; color: var(--text-md) !important; }
+        .stApp { background: var(--bg) !important; }
         #MainMenu, footer, header { visibility: hidden !important; }
-        .stDeployButton { display: none !important; }
+        .block-container { padding-top: 0 !important; padding-bottom: 6rem !important; max-width: 100% !important; }
 
-        .block-container {
-            padding-top: 0 !important;
-            padding-bottom: 6rem !important;
-            max-width: 100% !important;
+        /* SIDEBAR */
+        [data-testid="stSidebar"] {
+            background: var(--bg-raised) !important;
+            border-right: 1px solid var(--rule-strong) !important;
+            box-shadow: inset 0 3px 0 0 var(--amber) !important;
+        }
+        [data-testid="stSidebar"] > div:first-child { padding: 0 !important; }
+        [data-testid="stSidebar"] .stMarkdown,
+        [data-testid="stSidebar"] .stFileUploader,
+        [data-testid="stSidebar"] .stButton,
+        [data-testid="stSidebar"] .stMultiSelect {
+            padding-left: var(--u5) !important;
+            padding-right: var(--u5) !important;
         }
 
-        hr {
-            border: none !important;
-            border-top: 1px solid var(--rule) !important;
-            margin: var(--u4) 0 !important;
+        .sidebar-brand {
+            padding: var(--u6) var(--u5) var(--u5);
+            border-bottom: 1px solid var(--rule-strong);
+            position: relative; overflow: hidden;
+        }
+        .sidebar-brand::before {
+            content: 'CX'; font-family: var(--font-serif); font-size: 7rem;
+            color: var(--rule-strong); position: absolute; right: -12px; top: -18px;
+            line-height: 1; pointer-events: none; user-select: none;
+        }
+        .sidebar-brand .wordmark {
+            font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-hi);
+        }
+        .sidebar-brand .wordmark em { color: var(--amber); font-style: normal; }
+        .sidebar-brand .tagline {
+            font-size: 0.56rem; color: var(--text-ghost); letter-spacing: 0.14em;
+            text-transform: uppercase; margin-top: var(--u2);
+        }
+
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--rule-strong); }
+        .stat-card { padding: var(--u4) var(--u5) var(--u3); border-right: 1px solid var(--rule); }
+        .stat-card:last-child { border-right: none; }
+        .stat-card .stat-value { font-family: var(--font-serif); font-style: italic; font-size: 2.4rem; color: var(--amber); line-height: 1; }
+        .stat-card .stat-label { font-size: 0.55rem; font-weight: 600; color: var(--text-ghost); text-transform: uppercase; letter-spacing: 0.14em; }
+
+        .sidebar-section-label {
+            font-size: 0.55rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.16em; color: var(--text-ghost);
+            margin: var(--u5) 0 var(--u3); padding: 0 var(--u5);
+            display: flex; align-items: center; gap: var(--u3);
+        }
+        .sidebar-section-label::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+
+        .sidebar-footer {
+            padding: var(--u4) var(--u5); font-size: 0.54rem;
+            color: var(--text-ghost); letter-spacing: 0.08em; border-top: 1px solid var(--rule);
         }
         </style>
         ''',
