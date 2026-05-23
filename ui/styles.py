@@ -10,6 +10,35 @@ def inject_css() -> None:
            This is a document intelligence tool. Mono IS the personality.
         ═══════════════════════════════════════════════════════════════════════ */
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=block');
+
+        /* Force Material Symbols on any element Streamlit uses for icons.
+           Without this, icon names leak as plain text (e.g. "face", "smart_toy",
+           "arrow_right") because the global mono font override wins. */
+        [data-testid="stIconMaterial"],
+        [data-testid="chatAvatarIcon-user"] span,
+        [data-testid="chatAvatarIcon-assistant"] span,
+        [data-testid="stExpander"] summary svg + span,
+        [data-testid="stExpander"] summary span[data-testid="stIconMaterial"],
+        span.material-symbols-rounded,
+        span.material-icons,
+        span[class*="material-symbols"],
+        span[class*="material-icons"] {
+            font-family: 'Material Symbols Rounded' !important;
+            font-weight: 400 !important;
+            font-style: normal !important;
+            font-size: 18px !important;
+            line-height: 1 !important;
+            letter-spacing: normal !important;
+            text-transform: none !important;
+            display: inline-block !important;
+            white-space: nowrap !important;
+            word-wrap: normal !important;
+            direction: ltr !important;
+            -webkit-font-feature-settings: 'liga' !important;
+            font-feature-settings: 'liga' !important;
+            -webkit-font-smoothing: antialiased !important;
+        }
 
         /* ═══════════════════════════════════════════════════════════════════════
            DESIGN TOKENS
@@ -557,21 +586,35 @@ def inject_css() -> None:
             line-height: 1.8 !important;
         }
 
+        [data-testid="chatAvatarIcon-user"],
+        [data-testid="chatAvatarIcon-assistant"] {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 0 !important;
+            overflow: hidden !important;
+            flex-shrink: 0 !important;
+        }
         [data-testid="chatAvatarIcon-user"] {
             background: var(--amber-dim) !important;
             color: var(--amber) !important;
             border: 1px solid var(--amber-border) !important;
-            border-radius: 0 !important;
-            font-family: var(--font-mono) !important;
-            font-size: 0.6rem !important;
         }
         [data-testid="chatAvatarIcon-assistant"] {
             background: var(--bg-panel) !important;
             color: var(--text-lo) !important;
             border: 1px solid var(--rule-strong) !important;
-            border-radius: 0 !important;
-            font-family: var(--font-mono) !important;
-            font-size: 0.6rem !important;
+        }
+        /* Give the message bubble room next to the avatar */
+        [data-testid="stChatMessage"] {
+            gap: var(--u4) !important;
+        }
+        [data-testid="stChatMessage"] > div:last-child {
+            min-width: 0 !important;
+            flex: 1 !important;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -631,6 +674,13 @@ def inject_css() -> None:
             font-weight: 600 !important;
             letter-spacing: 0.04em !important;
             transition: color 0.12s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: var(--u3) !important;
+            padding: var(--u3) var(--u4) !important;
+        }
+        [data-testid="stExpander"] summary p {
+            margin: 0 !important;
         }
         [data-testid="stExpander"] summary:hover {
             color: var(--amber) !important;

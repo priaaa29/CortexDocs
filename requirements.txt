@@ -1,9 +1,9 @@
 streamlit
+python-dotenv
+pypdf
 sentence-transformers
 faiss-cpu
-pypdf
-groq
-python-dotenv
 numpy
-flashrank
 rank_bm25
+groq
+flashrank
